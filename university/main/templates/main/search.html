@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Instructor Search</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+    <h1>Instructor Search</h1>
+
+    <form id="search-form">
+        {% csrf_token %}
+        <label for="instructor_id">ID:</label>
+        <input type="text" id="instructor_id" name="instructor_id"><br><br>
+
+        <label for="instructor_name">Name:</label>
+        <input type="text" id="instructor_name" name="instructor_name"><br><br>
+
+        <label for="instructor_surname">Surname:</label>
+        <input type="text" id="instructor_surname" name="instructor_surname"><br><br>
+
+        <button type="button" id="search_submit">Search</button>
+    </form>
+
+    <div id="searchResults"></div>
+
+    <script>
+        $("#search_submit").click(function(){
+            var instructor_id = $("#instructor_id").val();
+            var instructor_name = $("#instructor_name").val();
+            var instructor_surname = $("#instructor_surname").val();
+            
+            $.get("/main/search_instructor/", {
+                'instructor_id': instructor_id,
+                'instructor_name': instructor_name,
+                'instructor_surname': instructor_surname
+            }, function(data) {
+                if (data.error) {
+                    $("#searchResults").html("<p>Error fetching data.</p>");
+                } else {
+                    var html = "<ul>";
+                    data.instructors.forEach(function(instructor) {
+                        html += `<li>ID: ${instructor.instructor_id}, Name: ${instructor.instructor_name}, Surname: ${instructor.instructor_surname}, Department: ${instructor.department}</li>`;
+                    });
+                    html += "</ul>";
+                    $("#searchResults").html(html);
+                }
+            });
+        });
+        
+        
+        
+    </script>
+</body>
+</html>

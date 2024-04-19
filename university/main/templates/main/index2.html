@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Document</title>
+</head>
+<body>
+    <h2>Add a New Student</h2>
+    <form id="add-student-form">
+        {% csrf_token %} 
+        <label for="student_name">Student Name:</label>
+        <input type="text" id="student_name" name="student_name"><br><br>
+    
+        <label for="student_surname">Student Surname:</label>
+        <input type="text" id="student_surname" name="student_surname"><br><br>
+    
+        <label for="student_photo">Student Photo:</label>
+        <input type="file" id="student_photo" name="student_photo"><br><br>
+    
+        <label for="student_major">Student Major:</label>
+        <input type="text" id="student_major" name="student_major"><br><br>
+    
+        <label for="student_email">Student Email:</label>
+        <input type="email" id="student_email" name="student_email"><br><br>
+    
+        <label for="student_phone_number">Student Phone Number:</label>
+        <input type="text" id="student_phone_number" name="student_phone_number"><br><br>
+    
+        <label for="student_dob">Student Date of Birth:</label>
+        <input type="date" id="student_dob" name="student_dob"><br><br>
+    
+        <label for="student_gender">Student Gender:</label>
+        <select id="student_gender" name="student_gender">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select><br><br>
+    
+        <label for="student_enrollment_status">Enrollment Status:</label>
+        <input type="text" id="student_enrollment_status" name="student_enrollment_status"><br><br>
+    
+        <button type="button" id="add_student_submit">Add Student</button>
+    </form>
+    
+    <div id="add-student-message"></div>
+
+
+
+    <h2>Add a new instructor</h2>
+    <form id="add-instructor-form">
+        {% csrf_token %}
+        <label for="instructor_name">Instructor Name:</label>
+        <input type="text" id="instructor_name" name="instructor_name"><br><br>
+    
+        <label for="instructor_surname">Instructor Surname:</label>
+        <input type="text" id="instructor_surname" name="instructor_surname"><br><br>
+
+        <label for="department">Department:</label>
+        <select id="department" name="department">
+            <option value="1">Computer Science</option>
+            <option value="2">Mathematics</option>
+            <option value="3">Biology</option>
+            <option value="4">Chemistry</option>
+            <option value="5">English</option>
+            <option value="6">History</option>
+            <option value="7">Physics</option>
+            <option value="8">Psychology</option>
+            <option value="9">Engineering</option>
+            <option value="10">Art</option>
+        </select><br><br>
+
+        <button type="button" id="add_instructor_submit">Add Instructor</button>
+    </form>
+
+    <div id="add-instructor-message"></div>
+    
+    <script>
+        // Add instructor
+        $(document).ready(function(){
+            var csrftoken = $('meta[name=csrf-token]').attr('content');
+
+            $("#add_instructor_submit").click(function(){
+                var instructorData = {
+                    instructor_name: $("#instructor_name").val(),
+                    instructor_surname: $("#instructor_surname").val(),
+                    department: $("#department").val()
+                };
+
+                console.log(JSON.stringify(instructorData));
+
+                $.ajax({
+                    url: "add_instructor/",
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(instructorData),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function(response){
+                        // Handle success
+                        $("#add-instructor-message").html("Instructor added successfully.");
+                    },
+                    error: function(error){
+                        // Handle error
+                        $("#add-instructor-message").html("Error adding instructor.");
+                    }
+                });
+            });
+        });
+
+
+        // Add student
+        $(document).ready(function(){
+            var csrftoken = $('meta[name=csrf-token]').attr('content');
+    
+            $("#add_student_submit").click(function(){
+                
+                var studentData = {
+                    student_name: $("#student_name").val(),
+                    student_surname: $("#student_surname").val(),
+                    student_major: $("#student_major").val(),
+                    student_email: $("#student_email").val(),
+                    student_phone_number: $("#student_phone_number").val(),
+                    student_dob: $("#student_dob").val(),
+                    student_gender: $("#student_gender").val(),
+                    student_enrollment_status: $("#student_enrollment_status").val()
+                };
+                
+                console.log(JSON.stringify(studentData));  // Debugging line
+                
+                $.ajax({
+                    url: "add_student/",
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(studentData),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function(response){
+                        // Handle success
+                        $("#add-student-message").html("Student added successfully.");
+                    },
+                    error: function(error){
+                        // Handle error
+                        $("#add-student-message").html("Error adding student.");
+                    }
+                });
+            });
+        });
+        
+
+        
+    </script>
+</body>
+</html>
