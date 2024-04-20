@@ -187,153 +187,6 @@ def add_instructor(request):
 
 def search_page(request):
     return render(request, "main/search.html")
-
-# def search_instructor(request):
-    
-#     instructor_id = request.GET.get('instructor_id', '')
-#     instructor_name = request.GET.get('instructor_name', '')
-#     instructor_surname = request.GET.get('instructor_surname', '')
-        
-#     if not instructor_id and not instructor_name and not instructor_surname:
-#         return JsonResponse({'error': 'No data provided'}, status=400)
-#     elif not instructor_id and not instructor_name:
-#         try:
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                 SELECT * FROM instructors WHERE instructor_surname = %s;
-#                 """, [instructor_surname])
-
-#                 row = cursor.fetchall()
-
-#                 if row:
-#                     instructor_id = row[0]
-#                     instructor_name = row[1]
-#                     instructor_surname = row[2]
-#                     department = row[3]
-
-#                     return JsonResponse({'instructor_id': instructor_id, 'instructor_name' : instructor_name, 'instructor_surname' : instructor_surname, 'department' : department})
-            
-#                 else:
-#                     return JsonResponse({'error': 'Instructor not found'})
-
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-#     elif not instructor_id and not instructor_surname:
-#         try:
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                 SELECT * FROM instructors WHERE instructor_name = %s;
-#                 """, [instructor_name])
-
-#                 row = cursor.fetchall()
-
-#                 if row:
-#                     instructor_id = row[0]
-#                     instructor_name = row[1]
-#                     instructor_surname = row[2]
-#                     department = row[3]
-
-#                     return JsonResponse({'instructor_id': instructor_id, 'instructor_name' : instructor_name, 'instructor_surname' : instructor_surname, 'department' : department})
-            
-#                 else:
-#                     return JsonResponse({'error': 'Instructor not found'})
-
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-        
-#     elif not instructor_name and not instructor_surname:
-#         try:
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                 SELECT * FROM instructors WHERE instructor_id = %s;
-#                 """, [instructor_id])
-
-#                 row = cursor.fetchall()
-
-#                 if row:
-#                     instructor_id = row[0]
-#                     instructor_name = row[1]
-#                     instructor_surname = row[2]
-#                     department = row[3]
-
-#                     return JsonResponse({'instructor_id': instructor_id, 'instructor_name' : instructor_name, 'instructor_surname' : instructor_surname, 'department' : department})
-            
-#                 else:
-#                     return JsonResponse({'error': 'Instructor not found'})
-
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-        
-#     elif not instructor_id:
-#         try:
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                 SELECT * FROM instructors WHERE instructor_name = %s, instructor_surname = %s;
-#                 """, [instructor_name, instructor_surname])
-
-#                 row = cursor.fetchall()
-
-#                 if row:
-#                     instructor_id = row[0]
-#                     instructor_name = row[1]
-#                     instructor_surname = row[2]
-#                     department = row[3]
-
-#                     return JsonResponse({'instructor_id': instructor_id, 'instructor_name' : instructor_name, 'instructor_surname' : instructor_surname, 'department' : department})
-            
-#                 else:
-#                     return JsonResponse({'error': 'Instructor not found'})
-
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-    
-#     elif not instructor_name:
-#         try:
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                 SELECT * FROM instructors WHERE instructor_id = %s, instructor_surname = %s;
-#                 """, [instructor_id, instructor_surname])
-
-#                 row = cursor.fetchall()
-
-#                 if row:
-#                     instructor_id = row[0]
-#                     instructor_name = row[1]
-#                     instructor_surname = row[2]
-#                     department = row[3]
-
-#                     return JsonResponse({'instructor_id': instructor_id, 'instructor_name' : instructor_name, 'instructor_surname' : instructor_surname, 'department' : department})
-            
-#                 else:
-#                     return JsonResponse({'error': 'Instructor not found'})
-                
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-        
-#     elif not instructor_surname:
-#         try:
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                 SELECT * FROM instructors WHERE instructor_id = %s, instructor_name = %s;
-#                 """, [instructor_id, instructor_name])
-
-#                 row = cursor.fetchall()
-
-#                 if row:
-#                     instructor_id = row[0]
-#                     instructor_name = row[1]
-#                     instructor_surname = row[2]
-#                     department = row[3]
-
-#                     return JsonResponse({'instructor_id': instructor_id, 'instructor_name' : instructor_name, 'instructor_surname' : instructor_surname, 'department' : department})
-            
-#                 else:
-#                     return JsonResponse({'error': 'Instructor not found'})
-
-#         except Exception as e:
-#             logger.error("Error executing SQL query: %s", e)
-#             return JsonResponse({'error': 'Internal server error'}, status=500)
-
        
 def search_instructor(request):
     instructor_id = request.GET.get('instructor_id', '')
@@ -357,7 +210,6 @@ def search_instructor(request):
     if instructor_surname:
         query += " AND instructor_surname = %s"
         query_params.append(instructor_surname)
-    print(query)
     try:
         with connection.cursor() as cursor:
             cursor.execute(query, query_params)
@@ -379,3 +231,57 @@ def search_instructor(request):
                 return JsonResponse({'error': 'Instructors not found'})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def update_instructor(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            print("Received data:", data)  # Debugging line
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        
+        # Extract data from JSON
+        instructor_id = data.get('instructor_id', None)
+        instructor_name = data.get('instructor_name', None)
+        instructor_surname = data.get('instructor_surname', None)
+        department = data.get('department', None)
+        
+        print("Extracted data:", instructor_id, instructor_name, instructor_surname, department)  # Debugging line
+        
+        # Check if required data is provided
+        if not instructor_id or not instructor_name or not instructor_surname or not department:
+            return JsonResponse({'error': 'Required fields missing'}, status=400)
+        
+        # Insert data into database
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE instructors 
+                    SET instructor_name=%s, instructor_surname=%s, department_id=%s 
+                    WHERE instructor_id=%s
+                """, [instructor_name, instructor_surname, department, instructor_id])
+            
+            return JsonResponse({'success': True})
+        
+        except Exception as e:
+            print("Database error:", e)  # Debugging line
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+def delete_instructor(request, instructor_id):
+    if request.method == 'DELETE':
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM instructors WHERE instructor_id=%s", [instructor_id])
+            
+            return JsonResponse({'success': True})
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)

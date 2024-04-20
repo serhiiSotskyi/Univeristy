@@ -14,4 +14,6 @@ urlpatterns = [
     path('add_instructor/', views.add_instructor, name='add_instructor'),
     path('search_page/', views.search_page, name='search_page'),
     path('search_instructor/', views.search_instructor, name='search_instructor'),
+    path('update_instructor/', views.update_instructor, name='update_instructor'),
+    path('delete_instructor/<int:instructor_id>/', views.delete_instructor, name='delete_instructor'),
 ]

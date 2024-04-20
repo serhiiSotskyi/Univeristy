@@ -22,33 +22,137 @@
         <button type="button" id="search_submit">Search</button>
     </form>
 
-    <div id="searchResults"></div>
+    <div id="searchResults">
+        
+    </div>
 
     <script>
-        $("#search_submit").click(function(){
-            var instructor_id = $("#instructor_id").val();
-            var instructor_name = $("#instructor_name").val();
-            var instructor_surname = $("#instructor_surname").val();
-            
-            $.get("/main/search_instructor/", {
-                'instructor_id': instructor_id,
-                'instructor_name': instructor_name,
-                'instructor_surname': instructor_surname
-            }, function(data) {
-                if (data.error) {
-                    $("#searchResults").html("<p>Error fetching data.</p>");
-                } else {
-                    var html = "<ul>";
-                    data.instructors.forEach(function(instructor) {
-                        html += `<li>ID: ${instructor.instructor_id}, Name: ${instructor.instructor_name}, Surname: ${instructor.instructor_surname}, Department: ${instructor.department}</li>`;
-                    });
-                    html += "</ul>";
-                    $("#searchResults").html(html);
-                }
+        $(document).ready(function(){
+            $("#search_submit").click(function(){
+                var instructor_id = $("#instructor_id").val();
+                var instructor_name = $("#instructor_name").val();
+                var instructor_surname = $("#instructor_surname").val();
+                
+                $.get("/main/search_instructor/", {
+                    'instructor_id': instructor_id,
+                    'instructor_name': instructor_name,
+                    'instructor_surname': instructor_surname
+                }, function(data) {
+                    if (data.error) {
+                        $("#searchResults").html("<p>Error fetching data.</p>");
+                    } else {
+                        var html = "<form id='selectInstructorForm'><ul>";
+                        data.instructors.forEach(function(instructor) {
+                            html += `<li>
+                                        <input type='radio' name='selectedInstructor' value='${instructor.instructor_id}'>
+                                        <input type='text' readonly class='instructor-id' value='${instructor.instructor_id}'>
+                                        <input type='text' class='instructor-name' value='${instructor.instructor_name}'>
+                                        <input type='text' class='instructor-surname' value='${instructor.instructor_surname}'>
+                                        <select class='department' id='department${instructor.instructor_id}'>
+                                            <option value="1">Computer Science</option>
+                                            <option value="2">Mathematics</option>
+                                            <option value="3">Biology</option>
+                                            <option value="4">Chemistry</option>
+                                            <option value="5">English</option>
+                                            <option value="6">History</option>
+                                            <option value="7">Physics</option>
+                                            <option value="8">Psychology</option>
+                                            <option value="9">Engineering</option>
+                                            <option value="10">Art</option>
+                                        </select><br><br>
+                                    </li>`;
+                        });
+                        html += "<button type='button' id='update'>Update</button>";
+                        html += "<button type='button' class='delete-instructor'>Delete</button><br><br>";
+                        html += "</ul></form>";
+                        
+                        $("#searchResults").html(html);
+                        
+                        // Set default department values
+                        data.instructors.forEach(function(instructor) {
+                            $(`#department${instructor.instructor_id}`).val(instructor.department);
+                        });
+                    }
+                });
             });
+        
+            $("body").on("click", "#update", function(){
+                console.log("Update button clicked");
+        
+                var selectedInstructorId;
+                var selectedInstructorName;
+                var selectedInstructorSurname;
+                var selectedDepartment;
+        
+                $("input[name='selectedInstructor']:checked").each(function(){
+                    selectedInstructorId = $(this).closest("li").find('.instructor-id').val();
+                    selectedInstructorName = $(this).closest("li").find('.instructor-name').val();
+                    selectedInstructorSurname = $(this).closest("li").find('.instructor-surname').val();
+                    selectedDepartment = $(this).closest("li").find(`#department${selectedInstructorId}`).val();
+                });
+        
+                var instructorData = {
+                    instructor_id: selectedInstructorId,
+                    instructor_name: selectedInstructorName,
+                    instructor_surname: selectedInstructorSurname,
+                    department: selectedDepartment
+                };
+        
+                console.log("Data to be sent:", instructorData);
+        
+                $.ajax({
+                    url: "/main/update_instructor/",
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': $('meta[name="csrf-token"]').attr('content'),
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(instructorData),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log("Success:", data);
+                    },
+                    error: function(error) {
+                        console.log("Error:", error);
+                    }
+                });
+            });
+
+            // Delete instructor
+            var selectedInstructorId;
+            $("body").on("click", ".delete-instructor", function(){
+                var selectedRadio = $("input[name='selectedInstructor']:checked");
+
+            if (selectedRadio.length === 0) {
+                alert("Please select an instructor to delete.");
+                return;
+            }
+
+            selectedInstructorId = selectedRadio.closest("li").find('.instructor-id').val();
+
+                
+
+            if(confirm("Are you sure you want to delete this instructor?")) {
+                $.ajax({
+                    url: `/main/delete_instructor/${selectedInstructorId}/`,
+                    type: "DELETE",
+                    headers: {
+                        'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(data) {
+                        console.log("Success:", data);
+                        // Refresh the search results after deletion
+                        $("#search_submit").click();
+                    },
+                    error: function(error) {
+                        console.log("Error:", error);
+                    }
+                });
+            }
         });
-        
-        
+    
+    });
         
     </script>
 </body>
