@@ -9,10 +9,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 def index(request):
-    return render(request, 'main/index.html')
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT course_id, course_name FROM courses")
+        courses = cursor.fetchall()
+        cursor.execute("SELECT department_id, department_name FROM departments")
+        departments = cursor.fetchall()
+    return render(request, 'main/index.html', {'courses' : courses, 'departments' : departments})
 
 def index2(request):
-    return render(request, 'main/index2.html')
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT department_id, department_name FROM departments")
+        departments = cursor.fetchall()
+    return render(request, 'main/index2.html', {'departments' : departments})
 
 def index3(request):
     return render(request, 'main/index3.html')
@@ -163,7 +171,7 @@ def add_instructor(request):
         instructor_surname = data.get('instructor_surname', None)
         department = data.get('department', None)
 
-        if not instructor_name or not instructor_surname or not department:
+        if not instructor_name or not instructor_surname:
             return JsonResponse({'error': 'Required fields missing'}, status=400)
         
         try:
@@ -186,7 +194,10 @@ def add_instructor(request):
 
 
 def search_page(request):
-    return render(request, "main/search.html")
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT department_id, department_name FROM departments")
+        departments = cursor.fetchall()
+    return render(request, "main/search.html", {'departments' : departments})
        
 def search_instructor(request):
     instructor_id = request.GET.get('instructor_id', '')
@@ -285,3 +296,119 @@ def delete_instructor(request, instructor_id):
     
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+
+
+def search_student(reqest):
+    student_id = reqest.GET.get('student_id', '')
+    student_name = reqest.GET.get('student_name', '')
+    student_surname = reqest.GET.get('student_surname', '')
+    student_major = reqest.GET.get('student_major', '')
+    student_phone_number = reqest.GET.get('student_phone_number', '')
+    student_dob = reqest.GET.get('student_dob', '')
+    student_email = reqest.GET.get('student_email', '')
+
+    if not student_id and not student_name and not student_surname and not student_major and not student_phone_number and not student_dob and not student_email:
+        return JsonResponse({'error': 'No data provided'}, status=400)
+    
+    query = "SELECT * FROM students WHERE 1=1"
+    query_params = []
+
+    if student_id:
+        query += " AND student_id = %s"
+        query_params.append(student_id)
+    
+    if student_name:
+        query += " AND student_name = %s"
+        query_params.append(student_name)
+
+    if student_surname:
+        query += " AND student_surname = %s"
+        query_params.append(student_surname)
+
+    if student_major:
+        query += " AND student_major = %s"
+        query_params.append(student_major)
+
+    if student_phone_number:
+        query += " AND student_phone_number = %s"
+        query_params.append(student_phone_number)
+
+    if student_dob:
+        query += " AND student_dob = %s"
+        query_params.append(student_dob)
+
+    if student_email:
+        query += " AND student_email = %s"
+        query_params.append(student_email)
+
+    print("Query:", query)
+    print("Params:", query_params)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, query_params)
+            rows = cursor.fetchall()
+
+            students = []
+            for row in rows:
+                student = {
+                    "student_id" : row[0],
+                    "student_name" : row[1],
+                    "student_surname" : row[2],
+                    "student_major" : row[3],
+                    "student_email" : row[4],
+                    "student_phone_number" : row[5],
+                    "student_dob" : row[6],
+                    "student_gender" : row[7],
+                    "student_enrollment_status" : row[8],
+                }
+                students.append(student)
+
+            if students:
+                print(students)
+                return JsonResponse({'students': students})
+            else:
+                return JsonResponse({'error': 'Students not found'})
+            
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def update_student(request, student_id):
+    # Retrieve data from request
+    data = json.loads(request.body.decode('utf-8'))
+
+    student_name = data.get('student_name', '')
+    student_surname = data.get('student_surname', '')
+    student_major = data.get('student_major', '')
+    student_phone_number = data.get('student_phone_number', '')
+    student_dob = data.get('student_dob', '')
+    student_email = data.get('student_email', '')
+
+    # Update the student in the database
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE students 
+                SET student_name=%s, student_surname=%s, student_major=%s, 
+                    student_phone_number=%s, student_dob=%s, student_email=%s
+                WHERE student_id=%s
+            """, [student_name, student_surname, student_major, student_phone_number,
+                  student_dob, student_email, student_id])
+
+        return JsonResponse({'success': True})
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+def delete_student(request, student_id):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM students WHERE student_id = %s", [student_id])
+
+        return JsonResponse({'success': True})
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
