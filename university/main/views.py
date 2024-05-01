@@ -405,7 +405,9 @@ def update_student(request, student_id):
 def delete_student(request, student_id):
     try:
         with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM enrollments WHERE student_id = %s;", [student_id])
             cursor.execute("DELETE FROM students WHERE student_id = %s", [student_id])
+            
 
         return JsonResponse({'success': True})
     
